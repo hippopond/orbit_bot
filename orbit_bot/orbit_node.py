@@ -1,8 +1,10 @@
 import math                                                                                                    
+import time
 import rclpy                                                                                                   
 from rclpy.node import Node                                                                                    
-from geometry_msgs.msg import TransformStamped                                                                 
-from tf2_ros import TransformBroadcaster                                                                       
+from geometry_msgs.msg import TransformStamped 
+from tf2_ros import TransformBroadcaster 
+from sensor_msgs.msg import LaserScan 
                                                                                                                
 class OrbitNode(Node):                                                                                         
     def __init__(self):                                                                                        
@@ -11,33 +13,44 @@ class OrbitNode(Node):
         self.timer = self.create_timer(0.1, self.publish_transform)                                            
         self.angle = 0.0                                                                                       
                                                                                                                
-    def publish_transform(self):                                                                               
-        t = TransformStamped()                                                                                 
-                                                                                                               
-        t.header.stamp = self.get_clock().now().to_msg()                                                       
-        t.header.frame_id = 'odom'                                                                             
-        t.child_frame_id = 'base_link'                                                                         
-                                                                                                               
-        radius = 2.0                                                                                           
-        t.transform.translation.x = radius * math.cos(self.angle)                                              
-        t.transform.translation.y = radius * math.sin(self.angle)                                              
-        t.transform.translation.z = 0.0                                                                        
-                                                                                                               
-        t.transform.rotation.x = 0.0                                                                           
-        t.transform.rotation.y = 0.0                                                                           
-                                                                                                               
+        # TRAP 2: Memory Leak list                                                                             
+        self.history = []                                                                                      
+
+    def publish_transform(self):
+        t = TransformStamped()
+
+        t.header.stamp = self.get_clock().now().to_msg()
+        t.header.frame_id = 'odom'
+        t.child_frame_id = 'base_link'
+
+        radius = 2.0
+        t.transform.translation.x = radius * math.cos(self.angle)
+        t.transform.translation.y = radius * math.sin(self.angle)
+        t.transform.translation.z = 0.0
+
+        t.transform.rotation.x = 0.0
+        t.transform.rotation.y = 0.0
         t.transform.rotation.z = math.sin((self.angle + (math.pi/2)) / 2.0)
-        t.transform.rotation.w = math.cos((self.angle + (math.pi/2)) / 2.0)                                    
-                                                                                                               
-        self.tf_broadcaster.sendTransform(t)                                                                   
-        self.angle += 0.05                                                                                     
+        t.transform.rotation.w = math.cos((self.angle + (math.pi/2)) / 2.0)
+
+        self.tf_broadcaster.sendTransform(t)
+        self.angle += 0.05
+
+        self.history.append(t)
+        
+        time.sleep(1.0) 
 
 def main(args=None):
     rclpy.init(args=args)
     node = OrbitNode()
-    rclpy.spin(node)
-    node.destroy_node()
-    rclpy.shutdown()
+    try:
+        rclpy.spin(node)
+    except KeyboardInterrupt:
+        pass
+    finally:
+        node.destroy_node()
+        rclpy.shutdown()
 
 if __name__ == '__main__':
     main()
+  

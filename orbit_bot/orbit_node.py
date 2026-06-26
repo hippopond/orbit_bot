@@ -26,8 +26,7 @@ class OrbitNode(Node):
         t.transform.rotation.x = 0.0                                                                           
         t.transform.rotation.y = 0.0                                                                           
                                                                                                                
-        # INTENTIONAL TYPO FOR CODERABBIT: math.p instead of math.pi                                           
-        t.transform.rotation.z = math.sin((self.angle + (math.p/2)) / 2.0) 
+        t.transform.rotation.z = math.sin((self.angle + (math.pi/2)) / 2.0)
         t.transform.rotation.w = math.cos((self.angle + (math.pi/2)) / 2.0)                                    
                                                                                                                
         self.tf_broadcaster.sendTransform(t)                                                                   

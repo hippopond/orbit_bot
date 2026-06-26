@@ -1,0 +1,13 @@
+# Ignore Emacs backup and auto-save files
+*~
+.*~
+\#*\#
+
+# Ignore local Pyright configurations
+pyrightconfig.json
+
+# Ignore ROS 2 build artifacts (just in case you ever build inside this folder)
+build/
+install/
+log/
+

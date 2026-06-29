@@ -10,6 +10,16 @@
         <color rgba="1.0 0.5 0.0 1.0"/>
       </material>
     </visual>
+    <collision>
+      <geometry>
+        <box size="0.5 0.3 0.1"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.001"/> 
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.0416" ixy="0.0" ixz="0.0" iyy="0.108" iyz="0.0" izz="0.141"/>
+    </inertial>
   </link>
 
   <!-- Left Wheel -->
@@ -22,6 +32,16 @@
         <color rgba="0.1 0.1 0.1 1.0"/>
       </material>
     </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.00135" ixy="0.0" ixz="0.0" iyy="0.00135" iyz="0.0" izz="0.0025"/>
+    </inertial>
   </link>
   <joint name="left_wheel_joint" type="continuous">
     <parent link="base_link"/>
@@ -38,6 +58,16 @@
       </geometry>
       <material name="black"/>
     </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.1" length="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.00135" ixy="0.0" ixz="0.0" iyy="0.00135" iyz="0.0" izz="0.0025"/>
+    </inertial>
   </link>
   <joint name="right_wheel_joint" type="continuous">
     <parent link="base_link"/>
@@ -54,6 +84,16 @@
       </geometry>
       <material name="black"/>
     </visual>
+    <collision>
+      <geometry>
+        <sphere radius="0.05"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.0002" ixy="0.0" ixz="0.0" iyy="0.0002" iyz="0.0" izz="0.0002"/>
+    </inertial>
   </link>
   <joint name="caster_wheel_joint" type="fixed">
     <parent link="base_link"/>
@@ -71,10 +111,34 @@
         <color rgba="0.0 0.0 1.0 1.0"/>
       </material>
     </visual>
+    <collision>
+      <geometry>
+        <cylinder radius="0.06" length="0.08"/>
+      </geometry>
+    </collision>
+    <inertial>
+      <mass value="0.2"/>
+      <origin xyz="0 0 0"/>
+      <inertia ixx="0.00028" ixy="0.0" ixz="0.0" iyy="0.00028" iyz="0.0" izz="0.00036"/>
+    </inertial>
   </link>
   <joint name="lidar_joint" type="fixed">
     <parent link="base_link"/>
     <child link="lidar_link"/>
     <origin xyz="0 0 0.09" rpy="0 0 0"/>
   </joint>
+
+  <!-- Gazebo Harmonic Diff Drive Plugin -->
+  <gazebo>
+    <plugin filename="gz-sim-diff-drive-system" name="gz::sim::systems::DiffDrive">
+      <left_joint>left_wheel_joint</left_joint>
+      <right_joint>right_wheel_joint</right_joint>
+      <wheel_separation>0.35</wheel_separation>
+      <wheel_radius>0.1</wheel_radius>
+      <odom_publish_frequency>50</odom_publish_frequency>
+      <topic>cmd_vel</topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_link</child_frame_id>
+    </plugin>
+  </gazebo>
 </robot>

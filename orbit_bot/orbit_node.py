@@ -32,8 +32,7 @@ class OrbitNode(Node):
         self.x += (msg.linear.x * math.cos(self.theta)) * dt
         self.y += (msg.linear.x * math.sin(self.theta)) * dt
         
-        # TRAP: Using angular.x (Barrel Roll) instead of angular.z (Turning left/right)
-        self.theta += msg.angular.x * dt
+        self.theta += msg.angular.z * dt
 
     def publish_transform(self):
         t = TransformStamped()

@@ -1,8 +1,9 @@
 import math                                                                                                    
 import rclpy                                                                                                   
 from rclpy.node import Node                                                                                    
-from geometry_msgs.msg import TransformStamped, Twist                                                                 
-from tf2_ros import TransformBroadcaster                                                                       
+from geometry_msgs.msg import TransformStamped, Twist
+from nav_msgs.msg import Odometry
+from tf2_ros import TransformBroadcaster
                                                                                                                
 class OrbitNode(Node): 
     def __init__(self):                                                                                        
@@ -13,6 +14,16 @@ class OrbitNode(Node):
         self.x = 0.0                                                                                           
         self.y = 0.0                                                                                           
         self.theta = 0.0                                                                                       
+        
+        # Track velocities for Odometry
+        self.vx = 0.0
+        self.vtheta = 0.0
+        
+        # Create the Odometry publisher
+        self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
+        
+        # Track time for dynamic dt
+        self.last_time = self.get_clock().now()
                                                                                                                
         # 1. NEW: Subscribe to the keyboard velocity commands                                                  
         self.subscription = self.create_subscription(                                                          
@@ -24,17 +35,22 @@ class OrbitNode(Node):
         # 2. Timer to constantly publish our position to RViz at 10Hz                                          
         self.timer = self.create_timer(0.1, self.publish_transform)                                            
                                                                                                                
-    def cmd_vel_callback(self, msg):
-        # Update the robot's position based on the keyboard command
-        # (Assuming the command is applied for 0.1 seconds)
-        dt = 0.1
-        
-        self.x += (msg.linear.x * math.cos(self.theta)) * dt
-        self.y += (msg.linear.x * math.sin(self.theta)) * dt
-        
-        self.theta += msg.angular.z * dt
+    def cmd_vel_callback(self, msg: Twist) -> None:
+        # Update current velocities for odometry
+        self.vx = msg.linear.x
+        self.vtheta = msg.angular.z
 
     def publish_transform(self):
+        # Calculate dynamic dt
+        current_time = self.get_clock().now()
+        dt = (current_time - self.last_time).nanoseconds / 1e9
+        self.last_time = current_time
+
+        # Calculate physics in the timer loop, NOT the callback!
+        self.x += (self.vx * math.cos(self.theta)) * dt
+        self.y += (self.vx * math.sin(self.theta)) * dt
+        self.theta += self.vtheta * dt
+
         t = TransformStamped()
 
         t.header.stamp = self.get_clock().now().to_msg()
@@ -53,6 +69,24 @@ class OrbitNode(Node):
         t.transform.rotation.w = math.cos(self.theta / 2.0)
 
         self.tf_broadcaster.sendTransform(t)
+
+        # Also publish the Odometry message
+        odom = Odometry()
+        odom.header.stamp = t.header.stamp
+        odom.header.frame_id = 'odom'
+        odom.child_frame_id = 'base_link'
+        
+        # Set the position
+        odom.pose.pose.position.x = self.x
+        odom.pose.pose.position.y = self.y
+        odom.pose.pose.position.z = 0.0
+        odom.pose.pose.orientation = t.transform.rotation
+        
+        # Set the velocity
+        odom.twist.twist.linear.x = self.vx
+        odom.twist.twist.angular.z = self.vtheta
+        
+        self.odom_pub.publish(odom)
 
 def main(args=None):
     rclpy.init(args=args)

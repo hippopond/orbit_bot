@@ -13,14 +13,19 @@ def generate_launch_description():
         robot_desc = infp.read()                                                                               
                                                                                                                
     return LaunchDescription([                                                                                 
-        Node(                                                                                                  
-            package='robot_state_publisher',                                                                   
-            executable='robot_state_publisher',                                                                
-            name='robot_state_publisher',                                                                      
-            output='screen',                                                                                   
-            parameters=[{'robot_description': robot_desc}]                                                     
-        ),                                                                                                     
-        Node(                                                                                                  
+        Node(
+            package='robot_state_publisher',
+            executable='robot_state_publisher',
+            name='robot_state_publisher',
+            output='screen',
+            parameters=[{'robot_description': robot_desc}]
+        ),
+        Node(
+            package='joint_state_publisher',
+            executable='joint_state_publisher',
+            name='joint_state_publisher'
+        ),
+        Node(
             package='orbit_bot',                                                                               
             executable='orbit_node',                                                                           
             name='orbit_node'                                                                                  

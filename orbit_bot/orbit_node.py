@@ -21,6 +21,9 @@ class OrbitNode(Node):
         
         # Create the Odometry publisher
         self.odom_pub = self.create_publisher(Odometry, '/odom', 10)
+        
+        # Track time for dynamic dt
+        self.last_time = self.get_clock().now()
                                                                                                                
         # 1. NEW: Subscribe to the keyboard velocity commands                                                  
         self.subscription = self.create_subscription(                                                          
@@ -37,16 +40,17 @@ class OrbitNode(Node):
         self.vx = msg.linear.x
         self.vtheta = msg.angular.z
 
-        # Update the robot's position based on the keyboard command
-        # (Assuming the command is applied for 0.1 seconds)
-        dt = 0.1
-        
-        self.x += (msg.linear.x * math.cos(self.theta)) * dt
-        self.y += (msg.linear.x * math.sin(self.theta)) * dt
-        
-        self.theta += msg.angular.z * dt
-
     def publish_transform(self):
+        # Calculate dynamic dt
+        current_time = self.get_clock().now()
+        dt = (current_time - self.last_time).nanoseconds / 1e9
+        self.last_time = current_time
+
+        # Calculate physics in the timer loop, NOT the callback!
+        self.x += (self.vx * math.cos(self.theta)) * dt
+        self.y += (self.vx * math.sin(self.theta)) * dt
+        self.theta += self.vtheta * dt
+
         t = TransformStamped()
 
         t.header.stamp = self.get_clock().now().to_msg()

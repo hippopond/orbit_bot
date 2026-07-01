@@ -16,10 +16,16 @@ def generate_launch_description():
         robot_desc = infp.read()
 
     # 1. Include the modern Gazebo Harmonic launch file
+    world_file = os.path.join(
+        get_package_share_directory('orbit_bot'),
+        'worlds',
+        'orbit.sdf'
+    )
+    
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
             get_package_share_directory('ros_gz_sim'), 'launch', 'gz_sim.launch.py')]),
-        launch_arguments={'gz_args': '-r empty.sdf'}.items()
+        launch_arguments={'gz_args': ['-r ', world_file]}.items()
     )
 
     # 2. Node to physically spawn the robot into Gazebo Harmonic
@@ -38,7 +44,8 @@ def generate_launch_description():
             '/clock@rosgraph_msgs/msg/Clock[gz.msgs.Clock',
             '/cmd_vel@geometry_msgs/msg/Twist]gz.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry[gz.msgs.Odometry',
-            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V'
+            '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
+            '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
         ],
         output='screen'
     )

@@ -19,7 +19,7 @@ def generate_launch_description():
     world_file = os.path.join(
         get_package_share_directory('orbit_bot'),
         'worlds',
-        'orbit.sdf'
+        'maze.sdf'
     )
     
     gazebo = IncludeLaunchDescription(
@@ -74,11 +74,20 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}]
     )
 
+    # 6. SLAM Toolbox (Simultaneous Localization and Mapping)
+    # This automatically reads /scan and /odom, and builds the /map
+    slam_toolbox = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource([os.path.join(
+            get_package_share_directory('slam_toolbox'), 'launch', 'online_async_launch.py')]),
+        launch_arguments={'use_sim_time': 'true'}.items()
+    )
+
     return LaunchDescription([
         gazebo,
         bridge,
         robot_state_publisher,
         joint_state_publisher,
         spawn_entity,
-        rviz2
+        rviz2,
+        slam_toolbox
     ])

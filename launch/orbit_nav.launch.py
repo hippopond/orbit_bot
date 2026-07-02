@@ -15,7 +15,7 @@ def generate_launch_description():
     with open(urdf_file, 'r') as infp:
         robot_desc = infp.read()
 
-    # 1. Include the modern Gazebo Harmonic launch file
+    # 1. Gazebo Harmonic with the Maze World
     world_file = os.path.join(
         get_package_share_directory('orbit_bot'),
         'worlds',
@@ -28,7 +28,7 @@ def generate_launch_description():
         launch_arguments={'gz_args': ['-r ', world_file]}.items()
     )
 
-    # 2. Node to physically spawn the robot into Gazebo Harmonic
+    # 2. Spawn Robot
     spawn_entity = Node(
         package='ros_gz_sim',
         executable='create',
@@ -47,10 +47,13 @@ def generate_launch_description():
             '/tf@tf2_msgs/msg/TFMessage[gz.msgs.Pose_V',
             '/scan@sensor_msgs/msg/LaserScan[gz.msgs.LaserScan'
         ],
+        remappings=[
+            ('/cmd_vel', '/cmd_vel_nav')  # <-- ADD THIS TO SPLICE THE WIRES!
+        ],
         output='screen'
     )
 
-    # 4. Our standard State Publishers
+    # 4. State Publishers
     robot_state_publisher = Node(
         package='robot_state_publisher',
         executable='robot_state_publisher',
@@ -66,7 +69,7 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}]
     )
 
-    # 5. RViz for Visualization
+    # 5. RViz for Visualization (we can use the default Nav2 config later)
     rviz2 = Node(
         package='rviz2',
         executable='rviz2',
@@ -74,12 +77,20 @@ def generate_launch_description():
         parameters=[{'use_sim_time': True}]
     )
 
-    # 6. SLAM Toolbox (Simultaneous Localization and Mapping)
-    # This automatically reads /scan and /odom, and builds the /map
-    slam_toolbox = IncludeLaunchDescription(
+    # 6. Navigation 2 (Replaces SLAM Toolbox)
+    map_file = os.path.join(
+        get_package_share_directory('orbit_bot'),
+        'maps',
+        'maze.yaml'
+    )
+    
+    nav2 = IncludeLaunchDescription(
         PythonLaunchDescriptionSource([os.path.join(
-            get_package_share_directory('slam_toolbox'), 'launch', 'online_async_launch.py')]),
-        launch_arguments={'use_sim_time': 'true'}.items()
+            get_package_share_directory('nav2_bringup'), 'launch', 'bringup_launch.py')]),
+        launch_arguments={
+            'map': map_file,
+            'use_sim_time': 'true'
+        }.items()
     )
 
     return LaunchDescription([
@@ -89,5 +100,5 @@ def generate_launch_description():
         joint_state_publisher,
         spawn_entity,
         rviz2,
-        slam_toolbox
+        nav2
     ])

@@ -1,5 +1,14 @@
 <?xml version="1.0"?>
 <robot name="orbit_bot">
+  <!-- Base Footprint (The 2D floor projection required by SLAM) -->
+  <link name="base_footprint"/>
+  
+  <joint name="base_footprint_joint" type="fixed">
+    <parent link="base_footprint"/>
+    <child link="base_link"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+
   <!-- Chassis -->
   <link name="base_link">
     <visual>
@@ -140,7 +149,7 @@
       <odom_topic>odom</odom_topic>
       <tf_topic>tf</tf_topic>
       <frame_id>odom</frame_id>
-      <child_frame_id>base_link</child_frame_id>
+      <child_frame_id>base_footprint</child_frame_id>
     </plugin>
   </gazebo>
 

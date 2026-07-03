@@ -1,4 +1,4 @@
-image: maze.pgm
+image: /ros2_ws/src/orbit_bot/maps/maze.pgm
 mode: trinary
 resolution: 0.050
 origin: [-4.918, -5.089, 0]

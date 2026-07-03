@@ -53,6 +53,14 @@ def generate_launch_description():
         output='screen'
     )
 
+    # 3.5 Bridge for Camera Images
+    image_bridge = Node(
+        package='ros_gz_image',
+        executable='image_bridge',
+        arguments=['/camera/image_raw'],
+        output='screen'
+    )
+
     # 4. State Publishers
     robot_state_publisher = Node(
         package='robot_state_publisher',
@@ -96,6 +104,7 @@ def generate_launch_description():
     return LaunchDescription([
         gazebo,
         bridge,
+        image_bridge,
         robot_state_publisher,
         joint_state_publisher,
         spawn_entity,

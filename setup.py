@@ -27,7 +27,8 @@ setup(
     tests_require=['pytest'],
     entry_points={
         'console_scripts': [
-            'orbit_node = orbit_bot.orbit_node:main'
+            'orbit_node = orbit_bot.orbit_node:main',
+            'vision_node = orbit_bot.vision_node:main'
         ],
     },
 )

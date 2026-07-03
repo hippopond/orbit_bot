@@ -1,6 +1,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
+from geometry_msgs.msg import Twist
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
@@ -16,10 +17,14 @@ class VisionNode(Node):
             10)
         # 2. Create a publisher for our new, drawn-on video feed
         self.publisher = self.create_publisher(Image, '/camera/image_annotated', 10)
+        # 3. Create a publisher to drive the robot!
+        self.cmd_publisher = self.create_publisher(Twist, '/cmd_vel_nav', 10)
         self.bridge = CvBridge()
         self.get_logger().info("Vision Node initialized! Hunting for the red RoboCup ball...")
 
     def image_callback(self, msg):
+        cmd = Twist()
+        ball_found = False
         try:
             # Convert ROS Image message to OpenCV format
             cv_image = self.bridge.imgmsg_to_cv2(msg, "bgr8")
@@ -60,6 +65,19 @@ class VisionNode(Node):
                 
                 # Log that we saw it!
                 # self.get_logger().info(f"Red ball detected at ({center_x}, {center_y})")
+                
+                # --- NEW VISUAL SERVOING MATH ---
+                ball_found = True
+                error_x = 320 - center_x
+                cmd.angular.z = float(error_x) * 0.005
+                cmd.linear.x = 0.2
+                
+        # --- NEW SEARCH MODE ---
+        if not ball_found:
+            cmd.angular.z = 0.5
+            cmd.linear.x = 0.0
+            
+        self.cmd_publisher.publish(cmd)
         
         # Convert OpenCV image back to a ROS message and publish it!
         try:
